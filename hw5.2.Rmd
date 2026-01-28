@@ -3,11 +3,80 @@ title: "Final HW Exercise 2"
 output: html_notebook
 ---
 
+```{r}
+library(dplyr)     # for data manipulation
+library(readxl)    # to read Excel files
+library(ggplot2)   # for plotting (optional)
+library(tidyr)     # for reshaping if needed
+```
+
+```{r}
+url <- "HDR25_Statistical_Annex_HDI_Table.xlsx" # Stores the file path or GitHub URL of the HDI Excel file in a variable called url
+raw.data <- read_excel(url) # Reads the Excel file into R as a dataframe called raw.data
+```
+
+```{r}
+head(raw.data)       # shows first few rows
+str(raw.data)        # checks column names and types
+```
+```{r}
+library(dplyr)
+
+raw.data <- raw.data %>% # renames column names
+  rename(
+    Country = `table_1_human_development_index_and_its_components`,
+    'Human Development Index' = `_3`,
+    'HDI Rank' = `_1`,
+    'Life expectancy at birth' = `_5`,
+   'Expected years of schooling' = '_7',
+   'Mean years of schooling' = '_9',
+    'GNI per capita' = '_11',
+    '2022 HDI Rank' = '_15'
+  )
+
+```
+
+```{r}
+names(raw.data) <- tolower(gsub("[^0-9a-zA-Z]+", "_", names(raw.data))) #Converts all column names to lowercase and replace spaces or special characters with _ for consistency.
+```
+
+```{r}
+hdi.data <- raw.data[-c(1:7), ] # Removes the first 7 rows which contained headers or notes, not data
+hdi.clean <- hdi.data[ , -c(4, 6, 8, 10, 12, 14)] # Removes specific unnecessary columns by their index
+```
+
+```{r}
+hdi.clean <- hdi.clean %>% 
+  drop_na() # Removes any rows that have missing values in any column
+```
+
+```{r}
+str(hdi.clean)  # Checks the structure of hdi.clean to confirm types and remaining columns
+```
+
+```{r}
+hdi.clean <- hdi.clean %>% # Starts a pipeline to clean and convert columns to numeric
+  mutate(
+    `life_expectancy_at_birth` = as.numeric(gsub(",", "", `life_expectancy_at_birth`)),
+    `expected_years_of_schooling` = as.numeric(gsub(",", "", `expected_years_of_schooling`)),
+    `mean_years_of_schooling` = as.numeric(gsub(",", "", `mean_years_of_schooling`)),
+    `gni_per_capita` = as.numeric(gsub(",", "", `gni_per_capita`))
+  )
+```
 
 
+```{r}
+hdi_means <- hdi.clean %>% # Starts a pipeline to calculate summary statistics
+  summarise(
+    life_expectancy = mean(`life_expectancy_at_birth`, na.rm = TRUE),
+    expected_years_schooling = mean(`expected_years_of_schooling`, na.rm = TRUE),
+    mean_years_schooling = mean(`mean_years_of_schooling`, na.rm = TRUE),
+    gni_per_capita = mean(`gni_per_capita`, na.rm = TRUE)
+  )
 
+hdi_means  # Displays the table of computed mean values
 
-
+```
 
 
 
